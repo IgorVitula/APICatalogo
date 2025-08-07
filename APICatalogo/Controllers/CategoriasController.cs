@@ -17,6 +17,14 @@ namespace APICatalogo.Controllers
             _context = context;
         }
 
+
+        [HttpGet("produtos")]
+        public ActionResult<IEnumerable<Categoria>> GetCategoriasProdutos()
+        {
+            return _context.Categorias.Include(p=> p.Produtos).ToList();
+        }
+
+
         [HttpGet]
         public ActionResult<IEnumerable<Categoria>> Get()
         {
@@ -49,7 +57,7 @@ namespace APICatalogo.Controllers
 
             _context.Categorias.Add(categoria);
             _context.SaveChanges();
-            return null;
+            return new CreatedAtRouteResult("ObterCategoriaPorId", new { id = categoria.CategoriaId }, categoria);
         }
 
         [HttpPut]

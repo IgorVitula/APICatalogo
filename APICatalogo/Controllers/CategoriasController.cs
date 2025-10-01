@@ -28,12 +28,20 @@ namespace APICatalogo.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Categoria>> Get()
         {
-            var categorias = _context.Categorias.ToList();
+            try
+            {
+                var categorias = _context.Categorias.ToList();
 
-            if (categorias is null || !categorias.Any())            
-                return NotFound("Nenhuma categoria encontrada.");  
-            
-            return categorias;
+                if (categorias is null || !categorias.Any())
+                    return NotFound("Nenhuma categoria encontrada.");
+
+                return categorias;
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um erro ao obter categorias.");               
+            }
+          
         }
 
 
@@ -64,13 +72,21 @@ namespace APICatalogo.Controllers
         [Route("{id:int}")]
         public ActionResult Put(int id, Categoria categoria)
         {
-            if (id != categoria.CategoriaId)
-                return BadRequest("Categoria inválida.");
+            try
+            {
+                if (id != categoria.CategoriaId)
+                    return BadRequest("Categoria inválida.");
 
-            _context.Entry(categoria).State = EntityState.Modified; 
-            _context.SaveChanges();
+                _context.Entry(categoria).State = EntityState.Modified;
+                _context.SaveChanges();
 
-            return Ok(categoria);
+                return Ok(categoria);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, "Ocorreu um erro ao atualizar a categoria.");
+            }
+           
 
         }
 

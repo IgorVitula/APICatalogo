@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace APICatalogo.Controllers
 {
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class ProdutosController : ControllerBase
     {
@@ -17,63 +17,62 @@ namespace APICatalogo.Controllers
             _context = context;
         }
 
-
         [HttpGet]
         public ActionResult<IEnumerable<Produto>> Get()
         {
-            var produtos = _context.produtos.ToList();
-            if (produtos is null )            
-                return NotFound();
-            
+            var produtos = _context.produtos.AsNoTracking().ToList();
+
+            if (!produtos.Any())
+                return NotFound("Nenhum produto encontrado.");
+
             return produtos;
         }
 
-        [HttpGet]
-        [Route("{id:int}", Name ="ObterProduto")]
-        public ActionResult<Produto> ObterPorId(int id)
+        [HttpGet("{id:int:min(1)}", Name = "ObterProduto")] //id:int:min(1)} restrição de rota no minimo valor maior que 1
+        public ActionResult<Produto> ObterPorId(int id, string param2)
         {
-            var produto = _context.produtos.FirstOrDefault(x => x.ProdutoId == id);
-            if (produto is null)            
-                return NotFound("Produto Não encontrado");
-            
+            var parametro2 = param2;
+            var produto = _context.produtos.AsNoTracking().FirstOrDefault(x => x.ProdutoId == id);
+
+            if (produto is null)
+                return NotFound("Produto não encontrado.");
+
             return produto;
         }
 
         [HttpPost]
         public ActionResult Post(Produto produto)
         {
-            if(produto is null)
-            {
-                return BadRequest("Produto inválido");
-            }
+            if (produto is null)
+                return BadRequest("Produto inválido.");
 
             _context.produtos.Add(produto);
-            _context.SaveChanges(); // persiste os dados na tabela 
-            return new CreatedAtRouteResult("ObterProduto", new { id = produto.ProdutoId }, produto); // aqui nesse retorno ele ja chama a rota de cima com o id do novo protudo pra vermos o retorno dele criado
+            _context.SaveChanges();
+
+            return new CreatedAtRouteResult("ObterProduto",
+                new { id = produto.ProdutoId }, produto);
         }
 
-        [HttpPut]
-        [Route("{id:int}")]
-        public ActionResult put(int id, Produto produto) // put é atualização completa
+        [HttpPut("{id:int}")]
+        public ActionResult Put(int id, Produto produto)
         {
-            if(id != produto.ProdutoId)
-            {
-                return BadRequest("Produto inválido");
-            }
-            _context.Entry(produto).State = EntityState.Modified; // informa que o produto foi modificado
+            if (id != produto.ProdutoId)
+                return BadRequest("Produto inválido.");
+
+            _context.Entry(produto).State = EntityState.Modified;
             _context.SaveChanges();
+
             return Ok(produto);
         }
 
-        [HttpDelete]
-        [Route("{id:int}")]
+        [HttpDelete("{id:int}")]
         public ActionResult Delete(int id)
         {
             var produto = _context.produtos.FirstOrDefault(x => x.ProdutoId == id);
+
             if (produto is null)
-            {
-                return BadRequest("Produto Não encontrado");
-            }
+                return NotFound("Produto não encontrado.");
+
             _context.produtos.Remove(produto);
             _context.SaveChanges();
 
